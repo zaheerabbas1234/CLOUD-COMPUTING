@@ -1,0 +1,34 @@
+import zmq
+import time
+import threading
+
+def publisher():
+    context = zmq.Context()
+    socket = context.socket(zmq.PUB)
+    socket.bind("tcp://127.0.0.1:5555")
+
+    time.sleep(1)  # allow subscriber to connect
+
+    while True:
+        msg = "Hello Subscribers"
+        print("Publishing:", msg)
+        socket.send_string(msg)
+        time.sleep(1)
+
+def subscriber():
+    context = zmq.Context()
+    socket = context.socket(zmq.SUB)
+    socket.connect("tcp://127.0.0.1:5555")
+    socket.setsockopt_string(zmq.SUBSCRIBE, "")
+
+    while True:
+        msg = socket.recv_string()
+        print("Received:", msg)
+
+# Run both concurrently
+threading.Thread(target=subscriber, daemon=True).start()
+threading.Thread(target=publisher, daemon=True).start()
+
+# Keep notebook alive
+while True:
+    time.sleep(1)
